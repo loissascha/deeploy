@@ -7,6 +7,7 @@ import (
 	"local/deeploy/internal/communication"
 	"log"
 	"net/http"
+	"slices"
 
 	"github.com/coder/websocket"
 )
@@ -38,7 +39,15 @@ func (s *Server) AddAgentIfNotExist(ctx context.Context, id int, conn *websocket
 }
 
 func (s *Server) RemoveAgent(a *ServerAgent) {
-
+	s.agents = slices.DeleteFunc(s.agents, func(aa *ServerAgent) bool {
+		if aa == a {
+			if aa.conn != nil {
+				aa.conn.CloseNow()
+			}
+			return true
+		}
+		return false
+	})
 }
 
 func (s *Server) RunWS() {
@@ -77,11 +86,8 @@ func (s *Server) RunWS() {
 			}
 			a, err := s.AddAgentIfNotExist(ctx, msgInitialize.ID, conn)
 			if err != nil {
-				err = conn.Write(ctx, websocket.MessageText, []byte(err.Error())) // TODO: write error message or something instead?
-				if err != nil {
-					log.Println("write:", err)
-					return
-				}
+				conn.Write(ctx, websocket.MessageText, []byte(err.Error())) // TODO: write error message or something instead?
+				conn.CloseNow()
 				return
 			}
 

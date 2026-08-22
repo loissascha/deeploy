@@ -90,18 +90,6 @@ func (a *Agent) WriteHeartbeatMessage(ctx context.Context) error {
 	return nil
 }
 
-func (a *Agent) WriteTest(ctx context.Context) error {
-	err := a.conn.Write(
-		ctx,
-		websocket.MessageText,
-		[]byte("hello controller"),
-	)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func (a *Agent) RunReader(ctx context.Context) error {
 	for {
 		_, data, err := a.conn.Read(ctx)

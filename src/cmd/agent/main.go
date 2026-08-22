@@ -18,10 +18,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// if err := a.WriteTest(ctx); err != nil {
-	// 	log.Fatal(err)
-	// }
-
 	if err := a.RunReader(ctx); err != nil {
 		log.Fatal(err)
 	}

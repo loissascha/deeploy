@@ -28,7 +28,7 @@ func NewAgent(id int) *Agent {
 	}
 }
 
-func (a *Agent) Run(ctx context.Context) error {
+func (a *Agent) RunConn(ctx context.Context) error {
 	conn, _, err := websocket.Dial(ctx, "ws://localhost:42066/ws", nil)
 	if err != nil {
 		return err

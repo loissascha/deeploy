@@ -8,7 +8,8 @@ import (
 )
 
 type Agent struct {
-	id int
+	id   int
+	conn *websocket.Conn
 }
 
 func NewAgent(id int) *Agent {
@@ -17,14 +18,23 @@ func NewAgent(id int) *Agent {
 	}
 }
 
-func (a *Agent) Run(ctx context.Context) error {
+func (a *Agent) Dial(ctx context.Context) error {
 	conn, _, err := websocket.Dial(ctx, "ws://localhost:42066/ws", nil)
 	if err != nil {
 		return err
 	}
-	defer conn.CloseNow()
+	a.conn = conn
+	return nil
+}
 
-	err = conn.Write(
+func (a *Agent) Close() {
+	if a.conn != nil {
+		a.conn.CloseNow()
+	}
+}
+
+func (a *Agent) WriteTest(ctx context.Context) error {
+	err := a.conn.Write(
 		ctx,
 		websocket.MessageText,
 		[]byte("hello controller"),
@@ -32,8 +42,11 @@ func (a *Agent) Run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
 
-	_, data, err := conn.Read(ctx)
+func (a *Agent) RunReader(ctx context.Context) error {
+	_, data, err := a.conn.Read(ctx)
 	if err != nil {
 		return err
 	}

@@ -106,7 +106,7 @@ func (s *Server) RunWS() {
 			}
 			a, err := s.AddAgentIfNotExist(ctx, msgInitialize.ID, conn)
 			if err != nil {
-				a.SendErrorMessage(ctx, err.Error())
+				s.SendErrorMessage(ctx, conn, err.Error())
 				conn.CloseNow()
 				return
 			}
@@ -124,4 +124,29 @@ func (s *Server) RunWS() {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func (s *Server) SendErrorMessage(ctx context.Context, conn *websocket.Conn, str string) error {
+	raw, err := json.Marshal(communication.ErrorMessage{
+		Error: str,
+	})
+	if err != nil {
+		return err
+	}
+
+	msg := communication.WSMessage{
+		MsgType: communication.MsgTypeError,
+		Data:    raw,
+	}
+
+	data, err := json.Marshal(msg)
+	if err != nil {
+		return err
+	}
+
+	err = conn.Write(ctx, websocket.MessageText, data)
+	if err != nil {
+		return err
+	}
+	return nil
 }

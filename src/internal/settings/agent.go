@@ -11,21 +11,41 @@ type AgentSettings struct {
 }
 
 func (s *AgentSettings) Save() error {
+	data, err := json.Marshal(s)
+	if err != nil {
+		return err
+	}
+	p, err := getAgentPath()
+	if err != nil {
+		return err
+	}
+	err = os.WriteFile(p, data, 0755)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-func LoadAgentSettings() (*AgentSettings, error) {
+func getAgentPath() (string, error) {
 	path, err := getSettingsBasePath()
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	err = os.MkdirAll(path, 0644)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	sPath := filepath.Join(path, "/agent.json")
+	return sPath, nil
+}
 
-	c, err := os.ReadFile(sPath)
+func LoadAgentSettings() (*AgentSettings, error) {
+	path, err := getAgentPath()
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
 			s := createDefaultAgentSettings()
@@ -39,7 +59,7 @@ func LoadAgentSettings() (*AgentSettings, error) {
 	}
 
 	var s AgentSettings
-	err = json.Unmarshal(c, &s)
+	err = json.Unmarshal(data, &s)
 	if err != nil {
 		return nil, err
 	}

@@ -10,8 +10,16 @@ type AgentSettings struct {
 	AgentID int `json:"agent_id"`
 }
 
+func (s *AgentSettings) Save() error {
+	return nil
+}
+
 func LoadAgentSettings() (*AgentSettings, error) {
 	path, err := getSettingsBasePath()
+	if err != nil {
+		return nil, err
+	}
+	err = os.MkdirAll(path, 0644)
 	if err != nil {
 		return nil, err
 	}
@@ -20,7 +28,12 @@ func LoadAgentSettings() (*AgentSettings, error) {
 	c, err := os.ReadFile(sPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return createDefaultAgentSettings(), nil
+			s := createDefaultAgentSettings()
+			err = s.Save()
+			if err != nil {
+				return nil, err
+			}
+			return s, nil
 		}
 		return nil, err
 	}
@@ -35,5 +48,7 @@ func LoadAgentSettings() (*AgentSettings, error) {
 }
 
 func createDefaultAgentSettings() *AgentSettings {
-	return &AgentSettings{}
+	return &AgentSettings{
+		AgentID: 1,
+	}
 }

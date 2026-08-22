@@ -2,6 +2,10 @@ package server
 
 import (
 	"context"
+	"encoding/json"
+	"local/deeploy/internal/communication"
+	"log"
+	"log/slog"
 
 	"github.com/coder/websocket"
 )
@@ -24,4 +28,30 @@ func (a *ServerAgent) SendWelcomeMessage(ctx context.Context) error {
 		return err
 	}
 	return nil
+}
+
+func (a *ServerAgent) RunReader(ctx context.Context) {
+	defer a.conn.CloseNow()
+
+	for {
+		_, data, err := a.conn.Read(ctx)
+		if err != nil {
+			log.Println("read:", err)
+			return
+		}
+
+		var msg communication.WSMessage
+		err = json.Unmarshal(data, &msg)
+		if err != nil {
+			log.Println("unmarshal:", err)
+			return
+		}
+
+		switch msg.MsgType {
+		case communication.MsgTypeInitiate:
+			slog.Error("why is there a duplicated initiate message")
+		default:
+			slog.Warn("unknown msg type:", "msgtype", msg.MsgType, "data", msg.Data)
+		}
+	}
 }

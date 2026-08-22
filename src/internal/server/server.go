@@ -21,20 +21,24 @@ func NewServer() *Server {
 	}
 }
 
-func (s *Server) AddAgentIfNotExist(ctx context.Context, id int, conn *websocket.Conn) error {
+func (s *Server) AddAgentIfNotExist(ctx context.Context, id int, conn *websocket.Conn) (*ServerAgent, error) {
 	for _, a := range s.agents {
 		if a.id == id {
-			return fmt.Errorf("agent with this 'id' is already registered")
+			return nil, fmt.Errorf("agent with this 'id' is already registered")
 		}
 	}
 
 	a := NewServerAgent(id, conn)
 	err := a.SendWelcomeMessage(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	s.agents = append(s.agents, a)
-	return nil
+	return a, nil
+}
+
+func (s *Server) RemoveAgent(a *ServerAgent) {
+
 }
 
 func (s *Server) RunWS() {
@@ -44,44 +48,47 @@ func (s *Server) RunWS() {
 			log.Println("conn err", err)
 			return
 		}
-		defer conn.CloseNow()
 
 		ctx := r.Context()
 
-		for {
-			_, data, err := conn.Read(ctx)
+		_, data, err := conn.Read(ctx)
+		if err != nil {
+			log.Println("read:", err)
+			conn.CloseNow()
+			return
+		}
+
+		var msg communication.WSMessage
+		err = json.Unmarshal(data, &msg)
+		if err != nil {
+			log.Println("unmarshal:", err)
+			conn.CloseNow()
+			return
+		}
+
+		switch msg.MsgType {
+		case communication.MsgTypeInitiate:
+			log.Println("initialize message received")
+			var msgInitialize communication.InitiateMessage
+			err = json.Unmarshal(msg.Data, &msgInitialize)
 			if err != nil {
-				log.Println("read:", err)
+				log.Println("unmarshal 2:", err)
+				return
+			}
+			a, err := s.AddAgentIfNotExist(ctx, msgInitialize.ID, conn)
+			if err != nil {
+				err = conn.Write(ctx, websocket.MessageText, []byte(err.Error())) // TODO: write error message or something instead?
+				if err != nil {
+					log.Println("write:", err)
+					return
+				}
 				return
 			}
 
-			var msg communication.WSMessage
-			err = json.Unmarshal(data, &msg)
-			if err != nil {
-				log.Println("unmarshal:", err)
-				return
-			}
-
-			switch msg.MsgType {
-			case communication.MsgTypeInitiate:
-				log.Println("initialize message received")
-				var msgInitialize communication.InitiateMessage
-				err = json.Unmarshal(msg.Data, &msgInitialize)
-				if err != nil {
-					log.Println("unmarshal 2:", err)
-					return
-				}
-				err = s.AddAgentIfNotExist(ctx, msgInitialize.ID, conn)
-				if err != nil {
-					err = conn.Write(ctx, websocket.MessageText, []byte(err.Error())) // TODO: write error message or something instead?
-					if err != nil {
-						log.Println("write:", err)
-						return
-					}
-					return
-				}
-				break
-			}
+			a.RunReader(ctx)
+			s.RemoveAgent(a)
+		default:
+			conn.CloseNow()
 		}
 	})
 

@@ -46,12 +46,11 @@ func (a *Agent) WriteTest(ctx context.Context) error {
 }
 
 func (a *Agent) RunReader(ctx context.Context) error {
-	_, data, err := a.conn.Read(ctx)
-	if err != nil {
-		return err
+	for {
+		_, data, err := a.conn.Read(ctx)
+		if err != nil {
+			return err
+		}
+		log.Printf("received: %s\n", data)
 	}
-
-	log.Printf("received: %s\n", data)
-
-	return nil
 }

@@ -28,12 +28,20 @@ func NewAgent(id int) *Agent {
 	}
 }
 
-func (a *Agent) Dial(ctx context.Context) error {
+func (a *Agent) Run(ctx context.Context) error {
 	conn, _, err := websocket.Dial(ctx, "ws://localhost:42066/ws", nil)
 	if err != nil {
 		return err
 	}
 	a.conn = conn
+	err = a.writeInitializeMessage(ctx)
+	if err != nil {
+		return err
+	}
+	err = a.runReader(ctx)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -43,7 +51,7 @@ func (a *Agent) Close() {
 	}
 }
 
-func (a *Agent) WriteInitializeMessage(ctx context.Context) error {
+func (a *Agent) writeInitializeMessage(ctx context.Context) error {
 	raw, err := json.Marshal(communication.InitiateMessage{
 		ID: a.id,
 	})
@@ -69,7 +77,7 @@ func (a *Agent) WriteInitializeMessage(ctx context.Context) error {
 	return nil
 }
 
-func (a *Agent) WriteHeartbeatMessage(ctx context.Context) error {
+func (a *Agent) writeHeartbeatMessage(ctx context.Context) error {
 	slog.Info("sending heartbeat to server")
 	raw, err := json.Marshal(communication.HeartbeatMessage{
 		Msg: "I'm still there.",
@@ -95,7 +103,7 @@ func (a *Agent) WriteHeartbeatMessage(ctx context.Context) error {
 	return nil
 }
 
-func (a *Agent) RunReader(ctx context.Context) error {
+func (a *Agent) runReader(ctx context.Context) error {
 	for {
 		_, data, err := a.conn.Read(ctx)
 		if err != nil {
@@ -117,7 +125,7 @@ func (a *Agent) RunReader(ctx context.Context) error {
 		case communication.MsgTypeHeartbeat:
 			slog.Info("server sent heartbeat.. sending one back <3")
 			a.lastHeartbeatReceived = time.Now().UTC()
-			err := a.WriteHeartbeatMessage(ctx)
+			err := a.writeHeartbeatMessage(ctx)
 			if err != nil {
 				return err
 			}

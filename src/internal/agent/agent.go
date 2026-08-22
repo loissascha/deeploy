@@ -2,6 +2,8 @@ package agent
 
 import (
 	"context"
+	"encoding/json"
+	"local/deeploy/internal/communication"
 	"log"
 
 	"github.com/coder/websocket"
@@ -31,6 +33,32 @@ func (a *Agent) Close() {
 	if a.conn != nil {
 		a.conn.CloseNow()
 	}
+}
+
+func (a *Agent) WriteInitializeMessage(ctx context.Context) error {
+	raw, err := json.Marshal(communication.InitiateMessage{
+		ID: a.id,
+	})
+	if err != nil {
+		return err
+	}
+
+	msg := communication.WSMessage{
+		MsgType: communication.MsgTypeInitiate,
+		Data:    raw,
+	}
+
+	data, err := json.Marshal(msg)
+	if err != nil {
+		return err
+	}
+
+	err = a.conn.Write(ctx, websocket.MessageText, data)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (a *Agent) WriteTest(ctx context.Context) error {

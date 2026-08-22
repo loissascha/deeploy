@@ -9,8 +9,8 @@ const (
 )
 
 type WSMessage struct {
-	MsgType string          `json:"msg_type"`
-	Data    json.RawMessage `json:"data"`
+	MsgType MsgType         `json:"msg_type"`
+	Data    json.RawMessage `json:"data,omitempty"`
 }
 
 type InitiateMessage struct {

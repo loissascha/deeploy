@@ -1,7 +1,14 @@
 package main
 
-import "fmt"
+import (
+	"local/deeploy/internal/server"
+	"log"
+)
 
 func main() {
-	fmt.Println("hello")
+	s := server.NewServer()
+
+	if err := s.Run(); err != nil {
+		log.Fatal(err)
+	}
 }

@@ -25,7 +25,8 @@ func (s *Server) Run() error {
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		conn, err := websocket.Accept(w, r, nil)
 		if err != nil {
-			panic(err)
+			log.Println(err)
+			return
 		}
 		defer conn.CloseNow()
 

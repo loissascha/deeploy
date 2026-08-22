@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"local/deeploy/internal/communication"
 	"log"
+	"log/slog"
 	"net/http"
 	"slices"
 
@@ -34,11 +35,13 @@ func (s *Server) AddAgentIfNotExist(ctx context.Context, id int, conn *websocket
 	if err != nil {
 		return nil, err
 	}
+	slog.Info("added new agent", "id", id)
 	s.agents = append(s.agents, a)
 	return a, nil
 }
 
 func (s *Server) RemoveAgent(a *ServerAgent) {
+	slog.Info("removing agent", "id", a.id)
 	s.agents = slices.DeleteFunc(s.agents, func(aa *ServerAgent) bool {
 		if aa == a {
 			if aa.conn != nil {

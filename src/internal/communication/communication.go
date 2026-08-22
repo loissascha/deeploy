@@ -1,11 +1,18 @@
 package communication
 
-type Server interface {
-	Agents() []ServerAgent
-	UpdateAgentsStatus()
+import "encoding/json"
+
+type MsgType string
+
+const (
+	MsgTypeInitiate MsgType = "initialize"
+)
+
+type WSMessage struct {
+	MsgType string          `json:"msg_type"`
+	Data    json.RawMessage `json:"data"`
 }
 
-type ServerAgent interface {
-	ID() int
-	SendHeartbeat() error
+type InitiateMessage struct {
+	ID int `json:"id"`
 }

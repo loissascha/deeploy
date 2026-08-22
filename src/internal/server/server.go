@@ -106,7 +106,7 @@ func (s *Server) RunWS() {
 			}
 			a, err := s.AddAgentIfNotExist(ctx, msgInitialize.ID, conn)
 			if err != nil {
-				conn.Write(ctx, websocket.MessageText, []byte(err.Error())) // TODO: write error message or something instead?
+				a.SendErrorMessage(ctx, err.Error())
 				conn.CloseNow()
 				return
 			}
@@ -114,6 +114,7 @@ func (s *Server) RunWS() {
 			a.RunReader(ctx)
 			s.RemoveAgent(a)
 		default:
+			slog.Error("received invalid first message", "data", data)
 			conn.CloseNow()
 		}
 	})

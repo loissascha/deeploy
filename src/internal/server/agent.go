@@ -30,6 +30,31 @@ func (a *ServerAgent) SendWelcomeMessage(ctx context.Context) error {
 	return nil
 }
 
+func (a *ServerAgent) SendErrorMessage(ctx context.Context, str string) error {
+	raw, err := json.Marshal(communication.ErrorMessage{
+		Error: str,
+	})
+	if err != nil {
+		return err
+	}
+
+	msg := communication.WSMessage{
+		MsgType: communication.MsgTypeError,
+		Data:    raw,
+	}
+
+	data, err := json.Marshal(msg)
+	if err != nil {
+		return err
+	}
+
+	err = a.conn.Write(ctx, websocket.MessageText, data)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (a *ServerAgent) SendHeartbeatMessage(ctx context.Context) error {
 	slog.Info("sending heartbeat to agent", "id", a.id)
 	raw, err := json.Marshal(communication.HeartbeatMessage{

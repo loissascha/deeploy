@@ -7,5 +7,7 @@ import (
 func main() {
 	s := server.NewServer()
 
+	go s.RunAgentHealthchecks()
+
 	s.RunWS()
 }

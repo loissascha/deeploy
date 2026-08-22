@@ -30,6 +30,32 @@ func (a *ServerAgent) SendWelcomeMessage(ctx context.Context) error {
 	return nil
 }
 
+func (a *ServerAgent) SendHeartbeatMessage(ctx context.Context) error {
+	slog.Info("sending heartbeat to agent", "id", a.id)
+	raw, err := json.Marshal(communication.HeartbeatMessage{
+		Msg: "are you still alive?", // TODO: maybe some sort of secret/identifier for the server?
+	})
+	if err != nil {
+		return err
+	}
+
+	msg := communication.WSMessage{
+		MsgType: communication.MsgTypeHeartbeat,
+		Data:    raw,
+	}
+
+	data, err := json.Marshal(msg)
+	if err != nil {
+		return err
+	}
+
+	err = a.conn.Write(ctx, websocket.MessageText, data)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (a *ServerAgent) RunReader(ctx context.Context) {
 	defer a.conn.CloseNow()
 
@@ -50,6 +76,8 @@ func (a *ServerAgent) RunReader(ctx context.Context) {
 		switch msg.MsgType {
 		case communication.MsgTypeInitiate:
 			slog.Error("why is there a duplicated initiate message")
+		case communication.MsgTypeHeartbeat:
+			slog.Info("heartbeat received on server")
 		default:
 			slog.Warn("unknown msg type:", "msgtype", msg.MsgType, "data", msg.Data)
 		}

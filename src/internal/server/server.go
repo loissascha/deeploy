@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"net/http"
 	"slices"
+	"time"
 
 	"github.com/coder/websocket"
 )
@@ -51,6 +52,22 @@ func (s *Server) RemoveAgent(a *ServerAgent) {
 		}
 		return false
 	})
+}
+
+func (s *Server) RunAgentHealthchecks() {
+	for {
+		for _, a := range s.agents {
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			err := a.SendHeartbeatMessage(ctx)
+			if err != nil {
+				cancel()
+				slog.Error("heartbeat failed on agent", "id", a.id)
+				s.RemoveAgent(a)
+				continue
+			}
+		}
+		time.Sleep(5 * time.Second)
+	}
 }
 
 func (s *Server) RunWS() {

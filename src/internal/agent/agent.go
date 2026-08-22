@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"local/deeploy/internal/communication"
 	"log"
+	"log/slog"
 
 	"github.com/coder/websocket"
 )
@@ -58,6 +59,32 @@ func (a *Agent) WriteInitializeMessage(ctx context.Context) error {
 		return err
 	}
 
+	return nil
+}
+
+func (a *Agent) WriteHeartbeatMessage(ctx context.Context) error {
+	slog.Info("sending heartbeat to server")
+	raw, err := json.Marshal(communication.HeartbeatMessage{
+		Msg: "I'm still there.",
+	})
+	if err != nil {
+		return err
+	}
+
+	msg := communication.WSMessage{
+		MsgType: communication.MsgTypeHeartbeat,
+		Data:    raw,
+	}
+
+	data, err := json.Marshal(msg)
+	if err != nil {
+		return err
+	}
+
+	err = a.conn.Write(ctx, websocket.MessageText, data)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

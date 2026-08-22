@@ -12,7 +12,8 @@ type Server struct {
 }
 
 type ServerAgent struct {
-	id int
+	id   int
+	conn *websocket.Conn
 }
 
 func NewServer() *Server {
@@ -21,11 +22,18 @@ func NewServer() *Server {
 	}
 }
 
-func (s *Server) Run() error {
+func NewServerAgent(id int, conn *websocket.Conn) *ServerAgent {
+	return &ServerAgent{
+		id:   id,
+		conn: conn,
+	}
+}
+
+func (s *Server) RunWS() {
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		conn, err := websocket.Accept(w, r, nil)
 		if err != nil {
-			log.Println(err)
+			log.Println("conn err", err)
 			return
 		}
 		defer conn.CloseNow()
@@ -52,7 +60,6 @@ func (s *Server) Run() error {
 	log.Println("listening on :42066")
 	err := http.ListenAndServe(":42066", nil)
 	if err != nil {
-		return err
+		panic(err)
 	}
-	return nil
 }

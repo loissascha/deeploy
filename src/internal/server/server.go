@@ -15,6 +15,12 @@ type ServerAgent struct {
 	id int
 }
 
+func NewServer() *Server {
+	return &Server{
+		agents: []*ServerAgent{},
+	}
+}
+
 func (s *Server) Run() error {
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		conn, err := websocket.Accept(w, r, nil)

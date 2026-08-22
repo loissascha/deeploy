@@ -5,7 +5,8 @@ import "encoding/json"
 type MsgType string
 
 const (
-	MsgTypeInitiate MsgType = "initialize"
+	MsgTypeInitiate  MsgType = "initialize"
+	MsgTypeHeartbeat MsgType = "heartbeat"
 )
 
 type WSMessage struct {
@@ -15,4 +16,8 @@ type WSMessage struct {
 
 type InitiateMessage struct {
 	ID int `json:"id"`
+}
+
+type HeartbeatMessage struct {
+	Msg string `json:"msg"`
 }

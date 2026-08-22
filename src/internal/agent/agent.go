@@ -10,11 +10,6 @@ import (
 	"github.com/coder/websocket"
 )
 
-// TODO:
-// has jobs (how are they defined? in settings? in whatever? per cli?)
-// after receiving the welcome message -> register each job
-// each job can have a run
-
 type Agent struct {
 	id                    int
 	conn                  *websocket.Conn

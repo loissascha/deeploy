@@ -6,24 +6,44 @@ import (
 	"local/deeploy/internal/communication"
 	"log"
 	"log/slog"
+	"time"
 
 	"github.com/coder/websocket"
 )
 
 type ServerAgent struct {
-	id   int
-	conn *websocket.Conn
+	id                    int
+	conn                  *websocket.Conn
+	lastHeartbeatReceived time.Time
 }
 
 func NewServerAgent(id int, conn *websocket.Conn) *ServerAgent {
 	return &ServerAgent{
-		id:   id,
-		conn: conn,
+		id:                    id,
+		conn:                  conn,
+		lastHeartbeatReceived: time.Now().UTC(),
 	}
 }
 
 func (a *ServerAgent) SendWelcomeMessage(ctx context.Context) error {
-	err := a.conn.Write(ctx, websocket.MessageText, []byte("welcome"))
+	raw, err := json.Marshal(communication.WelcomeMessage{
+		Msg: "welcome",
+	})
+	if err != nil {
+		return err
+	}
+
+	msg := communication.WSMessage{
+		MsgType: communication.MsgTypeWelcome,
+		Data:    raw,
+	}
+
+	data, err := json.Marshal(msg)
+	if err != nil {
+		return err
+	}
+
+	err = a.conn.Write(ctx, websocket.MessageText, data)
 	if err != nil {
 		return err
 	}
@@ -103,6 +123,7 @@ func (a *ServerAgent) RunReader(ctx context.Context) {
 			slog.Error("why is there a duplicated initiate message")
 		case communication.MsgTypeHeartbeat:
 			slog.Info("heartbeat received on server")
+			a.lastHeartbeatReceived = time.Now().UTC()
 		default:
 			slog.Warn("unknown msg type:", "msgtype", msg.MsgType, "data", msg.Data)
 		}

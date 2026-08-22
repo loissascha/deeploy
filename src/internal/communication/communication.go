@@ -6,6 +6,7 @@ type MsgType string
 
 const (
 	MsgTypeInitiate  MsgType = "initialize"
+	MsgTypeWelcome   MsgType = "welcome"
 	MsgTypeHeartbeat MsgType = "heartbeat"
 	MsgTypeError     MsgType = "error"
 )
@@ -17,6 +18,10 @@ type WSMessage struct {
 
 type InitiateMessage struct {
 	ID int `json:"id"`
+}
+
+type WelcomeMessage struct {
+	Msg string `json:"msg,omitempty"`
 }
 
 type HeartbeatMessage struct {

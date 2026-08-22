@@ -4,20 +4,22 @@ import (
 	"context"
 	"encoding/json"
 	"local/deeploy/internal/communication"
-	"log"
 	"log/slog"
+	"time"
 
 	"github.com/coder/websocket"
 )
 
 type Agent struct {
-	id   int
-	conn *websocket.Conn
+	id                    int
+	conn                  *websocket.Conn
+	lastHeartbeatReceived time.Time
 }
 
 func NewAgent(id int) *Agent {
 	return &Agent{
-		id: id,
+		id:                    id,
+		lastHeartbeatReceived: time.Now().UTC(),
 	}
 }
 
@@ -106,6 +108,28 @@ func (a *Agent) RunReader(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		log.Printf("received: %s\n", data)
+
+		var msg communication.WSMessage
+		err = json.Unmarshal(data, &msg)
+		if err != nil {
+			slog.Error("couldn't unmarshal received message.", "rawData", data, "err", err)
+			continue
+		}
+
+		switch msg.MsgType {
+		case communication.MsgTypeWelcome:
+			slog.Info("server sent us a welcome message <3")
+		case communication.MsgTypeError:
+			slog.Error("server sent error message", "rawData", data)
+		case communication.MsgTypeHeartbeat:
+			slog.Info("server sent heartbeat.. sending one back <3")
+			a.lastHeartbeatReceived = time.Now().UTC()
+			err := a.WriteHeartbeatMessage(ctx)
+			if err != nil {
+				return err
+			}
+		default:
+			slog.Error("unknown msg type:", "rawData", data)
+		}
 	}
 }

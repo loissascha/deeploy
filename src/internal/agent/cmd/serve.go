@@ -13,8 +13,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var configPath string
-
 // serveCmd represents the serve command
 var serveCmd = &cobra.Command{
 	Use:   "serve",
@@ -24,6 +22,10 @@ var serveCmd = &cobra.Command{
 		ctx := context.Background()
 
 		// load default config path
+		configPath, err := cmd.Flags().GetString("config")
+		if err != nil {
+			panic(err)
+		}
 		if configPath == "" {
 			var err error
 			configPath, err = settings.GetAgentPath()
@@ -61,7 +63,7 @@ var serveCmd = &cobra.Command{
 }
 
 func init() {
-	serveCmd.Flags().StringVarP(&configPath, "config", "c", "", "optional: path to agents config file")
+	serveCmd.Flags().StringP("config", "c", "", "optional: path to agents config file")
 
 	rootCmd.AddCommand(serveCmd)
 }

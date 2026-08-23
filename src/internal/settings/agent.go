@@ -6,8 +6,20 @@ import (
 	"path/filepath"
 )
 
+const AgentSettingsVersion = "v1.0"
+
 type AgentSettings struct {
-	AgentID int `json:"agent_id"`
+	Version          string `json:"version"`
+	AgentID          int    `json:"agent_id"`
+	ControllerHostWS string `json:"controller_host_ws"`
+}
+
+func createDefaultAgentSettings() *AgentSettings {
+	return &AgentSettings{
+		Version:          AgentSettingsVersion,
+		AgentID:          1,
+		ControllerHostWS: "ws://localhost:42066/ws",
+	}
 }
 
 func (s *AgentSettings) Save() error {
@@ -19,7 +31,7 @@ func (s *AgentSettings) Save() error {
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(p, data, 0755)
+	err = os.WriteFile(p, data, 0644)
 	if err != nil {
 		return err
 	}
@@ -31,7 +43,7 @@ func getAgentPath() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	err = os.MkdirAll(path, 0644)
+	err = os.MkdirAll(path, 0755)
 	if err != nil {
 		return "", err
 	}
@@ -65,10 +77,4 @@ func LoadAgentSettings() (*AgentSettings, error) {
 	}
 
 	return &s, nil
-}
-
-func createDefaultAgentSettings() *AgentSettings {
-	return &AgentSettings{
-		AgentID: 1,
-	}
 }

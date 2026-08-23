@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"local/deeploy/internal/communication"
+	"local/deeploy/internal/settings"
 	"log/slog"
 	"time"
 
@@ -23,8 +24,8 @@ func NewAgent(id int) *Agent {
 	}
 }
 
-func (a *Agent) RunConn(ctx context.Context) error {
-	conn, _, err := websocket.Dial(ctx, "ws://localhost:42066/ws", nil)
+func (a *Agent) RunConn(ctx context.Context, s *settings.AgentSettings) error {
+	conn, _, err := websocket.Dial(ctx, s.ControllerHostWS, nil)
 	if err != nil {
 		return err
 	}

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"local/deeploy/internal/agent"
+	"local/deeploy/internal/settings"
 	"log/slog"
 	"time"
 )
@@ -16,9 +17,15 @@ func main() {
 	a := agent.NewAgent(1)
 	ctx := context.Background()
 
+	agentSettings, err := settings.LoadAgentSettings()
+	if err != nil {
+		panic(err)
+	}
+	slog.Info("agent settings:", "as", agentSettings)
+
 	go func() {
 		for {
-			if err := a.RunConn(ctx); err != nil {
+			if err := a.RunConn(ctx, agentSettings); err != nil {
 				slog.Error("error running the server conn", "err", err)
 			}
 			slog.Info("retrying in 10 seconds...")

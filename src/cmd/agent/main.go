@@ -1,11 +1,7 @@
 package main
 
 import (
-	"context"
-	"local/deeploy/internal/agent"
-	"local/deeploy/internal/settings"
-	"log/slog"
-	"time"
+	"local/deeploy/internal/agent/cmd"
 )
 
 // TODO:
@@ -14,26 +10,30 @@ import (
 // each job can have a run
 
 func main() {
-	ctx := context.Background()
-
-	agentSettings, err := settings.LoadAgentSettings()
-	if err != nil {
-		panic(err)
-	}
-	slog.Info("agent settings:", "as", agentSettings)
-
-	a := agent.NewAgent(agentSettings)
-
-	go func() {
-		for {
-			if err := a.RunConn(ctx); err != nil {
-				slog.Error("error running the server conn", "err", err)
-			}
-			slog.Info("retrying in 10 seconds...")
-			time.Sleep(10 * time.Second)
-		}
-	}()
-
-	for {
-	}
+	cmd.Execute()
 }
+
+// func main() {
+// 	ctx := context.Background()
+//
+// 	agentSettings, err := settings.LoadAgentSettings()
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	slog.Info("agent settings:", "as", agentSettings)
+//
+// 	a := agent.NewAgent(agentSettings)
+//
+// 	go func() {
+// 		for {
+// 			if err := a.RunConn(ctx); err != nil {
+// 				slog.Error("error running the server conn", "err", err)
+// 			}
+// 			slog.Info("retrying in 10 seconds...")
+// 			time.Sleep(10 * time.Second)
+// 		}
+// 	}()
+//
+// 	for {
+// 	}
+// }

@@ -23,7 +23,7 @@ func createDefaultAgentSettings() *AgentSettings {
 }
 
 func (s *AgentSettings) Save() error {
-	data, err := json.Marshal(s)
+	data, err := json.MarshalIndent(s, "", " ")
 	if err != nil {
 		return err
 	}

@@ -25,6 +25,12 @@ func NewServer() *Server {
 }
 
 func (s *Server) AddAgentIfNotExist(ctx context.Context, id int, conn *websocket.Conn) (*ServerAgent, error) {
+	// give the agent a new id if it doesn't already have one
+	if id == 0 {
+		id = s.getNextAgentID()
+		slog.Info("creating new agent id for new agent", "agentID", id)
+	}
+
 	for _, a := range s.agents {
 		if a.id == id {
 			return nil, fmt.Errorf("agent with this 'id' is already registered")
@@ -32,7 +38,7 @@ func (s *Server) AddAgentIfNotExist(ctx context.Context, id int, conn *websocket
 	}
 
 	a := NewServerAgent(id, conn)
-	err := a.SendWelcomeMessage(ctx)
+	err := a.SendWelcomeMessage(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -70,6 +76,16 @@ func (s *Server) RunAgentHealthchecks() {
 	}
 }
 
+func (s *Server) getNextAgentID() int {
+	next := 1
+	for _, a := range s.agents {
+		if a.id >= next {
+			next = a.id + 1
+		}
+	}
+	return next
+}
+
 func (s *Server) RunWS() {
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		conn, err := websocket.Accept(w, r, nil)
@@ -104,7 +120,8 @@ func (s *Server) RunWS() {
 				log.Println("unmarshal 2:", err)
 				return
 			}
-			a, err := s.AddAgentIfNotExist(ctx, msgInitialize.ID, conn)
+
+			a, err := s.AddAgentIfNotExist(ctx, msgInitialize.AgentID, conn)
 			if err != nil {
 				s.SendErrorMessage(ctx, conn, err.Error())
 				conn.CloseNow()

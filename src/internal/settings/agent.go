@@ -18,7 +18,7 @@ type AgentSettings struct {
 func createDefaultAgentSettings() *AgentSettings {
 	return &AgentSettings{
 		Version:          AgentSettingsVersion,
-		AgentID:          1,
+		AgentID:          0,
 		ControllerHostWS: "ws://localhost:42066/ws",
 	}
 }

@@ -25,9 +25,9 @@ func NewServerAgent(id int, conn *websocket.Conn) *ServerAgent {
 	}
 }
 
-func (a *ServerAgent) SendWelcomeMessage(ctx context.Context) error {
+func (a *ServerAgent) SendWelcomeMessage(ctx context.Context, yourID int) error {
 	raw, err := json.Marshal(communication.WelcomeMessage{
-		Msg: "welcome",
+		YourID: yourID,
 	})
 	if err != nil {
 		return err

@@ -17,11 +17,11 @@ type WSMessage struct {
 }
 
 type InitiateMessage struct {
-	ID int `json:"id"`
+	AgentID int `json:"id"`
 }
 
 type WelcomeMessage struct {
-	Msg string `json:"msg,omitempty"`
+	YourID int `json:"id"`
 }
 
 type HeartbeatMessage struct {

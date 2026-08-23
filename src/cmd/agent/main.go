@@ -14,7 +14,6 @@ import (
 // each job can have a run
 
 func main() {
-	a := agent.NewAgent(1)
 	ctx := context.Background()
 
 	agentSettings, err := settings.LoadAgentSettings()
@@ -23,9 +22,11 @@ func main() {
 	}
 	slog.Info("agent settings:", "as", agentSettings)
 
+	a := agent.NewAgent(agentSettings)
+
 	go func() {
 		for {
-			if err := a.RunConn(ctx, agentSettings); err != nil {
+			if err := a.RunConn(ctx); err != nil {
 				slog.Error("error running the server conn", "err", err)
 			}
 			slog.Info("retrying in 10 seconds...")

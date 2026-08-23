@@ -12,20 +12,20 @@ import (
 )
 
 type Agent struct {
-	id                    int
+	settings              *settings.AgentSettings
 	conn                  *websocket.Conn
 	lastHeartbeatReceived time.Time
 }
 
-func NewAgent(id int) *Agent {
+func NewAgent(s *settings.AgentSettings) *Agent {
 	return &Agent{
-		id:                    id,
+		settings:              s,
 		lastHeartbeatReceived: time.Now().UTC(),
 	}
 }
 
-func (a *Agent) RunConn(ctx context.Context, s *settings.AgentSettings) error {
-	conn, _, err := websocket.Dial(ctx, s.ControllerHostWS, nil)
+func (a *Agent) RunConn(ctx context.Context) error {
+	conn, _, err := websocket.Dial(ctx, a.settings.ControllerHostWS, nil)
 	if err != nil {
 		return err
 	}
@@ -49,7 +49,7 @@ func (a *Agent) Close() {
 
 func (a *Agent) writeInitializeMessage(ctx context.Context) error {
 	raw, err := json.Marshal(communication.InitiateMessage{
-		ID: a.id,
+		AgentID: a.settings.AgentID,
 	})
 	if err != nil {
 		return err
@@ -99,6 +99,25 @@ func (a *Agent) writeHeartbeatMessage(ctx context.Context) error {
 	return nil
 }
 
+func (a *Agent) handleWelcomeMessage(msg communication.WSMessage) error {
+	slog.Info("server sent us a welcome message <3")
+
+	var w communication.WelcomeMessage
+	err := json.Unmarshal(msg.Data, &w)
+	if err != nil {
+		return err
+	}
+
+	if a.settings.AgentID != w.YourID {
+		a.settings.AgentID = w.YourID
+		err = a.settings.Save()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (a *Agent) runReader(ctx context.Context) error {
 	for {
 		_, data, err := a.conn.Read(ctx)
@@ -115,7 +134,10 @@ func (a *Agent) runReader(ctx context.Context) error {
 
 		switch msg.MsgType {
 		case communication.MsgTypeWelcome:
-			slog.Info("server sent us a welcome message <3")
+			err := a.handleWelcomeMessage(msg)
+			if err != nil {
+				slog.Error("error in communication message", "err", err)
+			}
 		case communication.MsgTypeError:
 			slog.Error("server sent error message", "rawData", data)
 		case communication.MsgTypeHeartbeat:

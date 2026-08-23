@@ -1,11 +1,14 @@
 /*
 Copyright © 2026 NAME HERE <EMAIL ADDRESS>
-
 */
 package cmd
 
 import (
-	"fmt"
+	"context"
+	"local/deeploy/internal/agent"
+	"local/deeploy/internal/settings"
+	"log/slog"
+	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -21,7 +24,39 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("serve called")
+		ctx := context.Background()
+
+		// load default agent settings path
+		path, err := settings.GetAgentPath()
+		if err != nil {
+			panic(err)
+		}
+
+		// load agent settings
+		agentSettings, err := settings.LoadAgentSettings(path)
+		if err != nil {
+			panic(err)
+		}
+		slog.Info("agent settings:", "as", agentSettings)
+
+		// create agent
+		a := agent.NewAgent(agentSettings)
+
+		// run agent connection to server
+		go func() {
+			for {
+				if err := a.RunConn(ctx); err != nil {
+					slog.Error("error running the server conn", "err", err)
+				}
+				slog.Info("retrying in 10 seconds...")
+				time.Sleep(10 * time.Second)
+			}
+		}()
+
+		// TODO: load jobs and run jobs when triggered
+
+		for {
+		}
 	},
 }
 

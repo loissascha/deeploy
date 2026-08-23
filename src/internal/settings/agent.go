@@ -28,7 +28,7 @@ func (s *AgentSettings) Save() error {
 	if err != nil {
 		return err
 	}
-	p, err := getAgentPath()
+	p, err := GetAgentPath()
 	if err != nil {
 		return err
 	}
@@ -39,26 +39,13 @@ func (s *AgentSettings) Save() error {
 	return nil
 }
 
-func getAgentPath() (string, error) {
-	// path, err := getSettingsBasePath()
-	// if err != nil {
-	// 	return "", err
-	// }
+func GetAgentPath() (string, error) {
 	path := "./"
-	// err := os.MkdirAll(path, 0755)
-	// if err != nil {
-	// 	return "", err
-	// }
 	sPath := filepath.Join(path, "/agent.json")
 	return sPath, nil
 }
 
-func LoadAgentSettings() (*AgentSettings, error) {
-	path, err := getAgentPath()
-	if err != nil {
-		return nil, err
-	}
-
+func LoadAgentSettings(path string) (*AgentSettings, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {

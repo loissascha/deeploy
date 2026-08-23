@@ -2,6 +2,7 @@ package settings
 
 import (
 	"encoding/json"
+	"log/slog"
 	"os"
 	"path/filepath"
 )
@@ -60,6 +61,7 @@ func LoadAgentSettings() (*AgentSettings, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
+			slog.Info("No agent config found. Creating default one.", "path", path)
 			s := createDefaultAgentSettings()
 			err = s.Save()
 			if err != nil {

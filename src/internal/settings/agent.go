@@ -40,14 +40,15 @@ func (s *AgentSettings) Save() error {
 }
 
 func getAgentPath() (string, error) {
-	path, err := getSettingsBasePath()
-	if err != nil {
-		return "", err
-	}
-	err = os.MkdirAll(path, 0755)
-	if err != nil {
-		return "", err
-	}
+	// path, err := getSettingsBasePath()
+	// if err != nil {
+	// 	return "", err
+	// }
+	path := "./"
+	// err := os.MkdirAll(path, 0755)
+	// if err != nil {
+	// 	return "", err
+	// }
 	sPath := filepath.Join(path, "/agent.json")
 	return sPath, nil
 }

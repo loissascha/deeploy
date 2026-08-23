@@ -3,6 +3,7 @@ package jobs
 import (
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 type Job struct {
@@ -32,6 +33,11 @@ func LoadJobsFromDisk() ([]*Job, error) {
 			continue
 		}
 		filename := e.Name()
+		splitName := strings.Split(filename, ".")
+		extension := splitName[len(splitName)-1]
+		if extension != "job" {
+			continue
+		}
 	}
 
 	return jobs, nil
